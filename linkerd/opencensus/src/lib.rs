@@ -9,11 +9,13 @@ use linkerd_error::Error;
 use linkerd_trace_context::export::{ExportSpan, SpanKind};
 use metrics::Registry;
 pub use opencensus_proto as proto;
-use opencensus_proto::agent::common::v1::Node;
-use opencensus_proto::agent::trace::v1::{
-    trace_service_client::TraceServiceClient, ExportTraceServiceRequest,
+use opencensus_proto::{
+    agent::{
+        common::v1::Node,
+        trace::v1::{trace_service_client::TraceServiceClient, ExportTraceServiceRequest},
+    },
+    trace::v1::{Span, TruncatableString},
 };
-use opencensus_proto::trace::v1::{Span, TruncatableString};
 use std::collections::HashMap;
 use tokio::{sync::mpsc, time};
 use tokio_stream::wrappers::ReceiverStream;
@@ -24,7 +26,7 @@ pub async fn export_spans<T, S>(client: T, node: Node, spans: S, metrics: Regist
 where
     T: GrpcService<BoxBody> + Clone,
     T::Error: Into<Error>,
-    T::ResponseBody: Default + Body<Data = tonic::codegen::Bytes> + Send + 'static,
+    T::ResponseBody: Body<Data = tonic::codegen::Bytes> + Send + 'static,
     <T::ResponseBody as Body>::Error: Into<Error> + Send,
     S: Stream<Item = ExportSpan> + Unpin,
 {
@@ -49,7 +51,7 @@ impl<T, S> SpanExporter<T, S>
 where
     T: GrpcService<BoxBody>,
     T::Error: Into<Error>,
-    T::ResponseBody: Default + Body<Data = tonic::codegen::Bytes> + Send + 'static,
+    T::ResponseBody: Body<Data = tonic::codegen::Bytes> + Send + 'static,
     <T::ResponseBody as Body>::Error: Into<Error> + Send,
     S: Stream<Item = ExportSpan> + Unpin,
 {
